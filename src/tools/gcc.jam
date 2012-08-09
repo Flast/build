@@ -492,6 +492,8 @@ toolset.flags gcc.compile DEFINES <define> ;
 toolset.flags gcc.compile INCLUDES <include> ;
 toolset.flags gcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
 toolset.flags gcc.compile.fortran USER_OPTIONS <fflags> ;
+toolset.flags gcc.compile.c++ USER_OPTIONS <exception-handling>on : -fexceptions ;
+toolset.flags gcc.compile.c++ USER_OPTIONS <exception-handling>off : -fno-exceptions ;
 
 rule compile.c++.pch ( targets * : sources * : properties * )
 {
