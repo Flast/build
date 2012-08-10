@@ -6,6 +6,8 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
+import errors ;
+
 #
 #   Returns a list of the following substrings:
 #   1) from beginning till the first occurrence of 'separator' or till the end,
@@ -121,6 +123,11 @@ rule replace (
     replacement  # The string to replace with.
     )
 {
+    if ! $(match)
+    {
+        errors.error match should not be null-string ;
+    }
+
     local result = "" ;
     local parts = 1 ;
     while $(parts)
