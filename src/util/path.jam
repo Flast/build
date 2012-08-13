@@ -17,6 +17,7 @@
 # only.
 
 import modules ;
+import os ;
 import regex ;
 import sequence ;
 import set ;
@@ -510,10 +511,21 @@ rule make-UNIX ( native )
         import errors ;
         errors.error "Empty path passed to 'make-UNIX'" ;
     }
-    else
+
+    # tilde-prefix will replace to home dir in UNIX system.
+    local tilde = [ MATCH ^(~)([^\/]*)(.*) : $(native) ] ;
+    if $(tilde[1])
     {
-        return [ NORMALIZE_PATH $(native:T) ] ;
+        local home = [ os.home-directories ] ;
+        if $(tilde[2])
+        {
+            errors.error "~user does not support yet" ;
+        }
+        # tilde[3] will expand slash-prefixed or none.
+        native = $(home)$(tilde[3]:E=) ;
     }
+
+    return [ NORMALIZE_PATH $(native:T) ] ;
 }
 
 
