@@ -13,7 +13,9 @@
 
 #include <assert.h>
 
+#ifndef BJAM_NO_MEM_CACHE
 static LIST * freelist[ 32 ];  /* junkpile for list_dealloc() */
+#endif
 
 static unsigned get_bucket( unsigned size )
 {
@@ -25,12 +27,14 @@ static unsigned get_bucket( unsigned size )
 static LIST * list_alloc( unsigned const size )
 {
     unsigned const bucket = get_bucket( size );
+#ifndef BJAM_NO_MEM_CACHE
     if ( freelist[ bucket ] )
     {
         LIST * result = freelist[ bucket ];
         freelist[ bucket ] = result->impl.next;
         return result;
     }
+#endif
     return (LIST *)BJAM_MALLOC( sizeof( LIST ) + ( 1u << bucket ) *
         sizeof( OBJECT * ) );
 }
@@ -46,7 +50,7 @@ static void list_dealloc( LIST * l )
     bucket = get_bucket( size );;
 
 #ifdef BJAM_NO_MEM_CACHE
-    BJAM_FREE( node );
+    BJAM_FREE( l );
 #else
     node->impl.next = freelist[ bucket ];
     freelist[ bucket ] = node;
@@ -366,6 +370,7 @@ LIST * list_unique( LIST * sorted_list )
 
 void list_done()
 {
+#ifndef BJAM_NO_MEM_CACHE
     int i;
     for ( i = 0; i < sizeof( freelist ) / sizeof( freelist[ 0 ] ); ++i )
     {
@@ -377,6 +382,7 @@ void list_done()
             BJAM_FREE( tmp );
         }
     }
+#endif
 }
 
 
