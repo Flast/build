@@ -181,6 +181,7 @@ typedef struct _jam_function
 {
     FUNCTION base;
     int code_size;
+    PARSE * parse;
     instruction * code;
     int num_constants;
     OBJECT * * constants;
@@ -1443,48 +1444,55 @@ static int compile_emit_actions( compiler * c, PARSE * parse )
     return (int)( c->actions->size - 1 );
 }
 
-static JAM_FUNCTION * compile_to_function( compiler * c )
+static FUNCTION * function_compile_internal( PARSE * parse, JAM_FUNCTION *
+    result, int compile_now );
+
+static JAM_FUNCTION * compile_to_function( compiler * c, JAM_FUNCTION * result )
 {
-    JAM_FUNCTION * const result = BJAM_MALLOC( sizeof( JAM_FUNCTION ) );
-    int i;
-    result->base.type = FUNCTION_JAM;
-    result->base.reference_count = 1;
-    result->base.formal_arguments = 0;
-    result->base.num_formal_arguments = 0;
-
-    result->base.rulename = 0;
-
-    result->code_size = c->code->size;
-    result->code = BJAM_MALLOC( c->code->size * sizeof( instruction ) );
-    memcpy( result->code, c->code->data, c->code->size * sizeof( instruction ) );
-
-    result->constants = BJAM_MALLOC( c->constants->size * sizeof( OBJECT * ) );
-    memcpy( result->constants, c->constants->data, c->constants->size * sizeof(
-        OBJECT * ) );
-    result->num_constants = c->constants->size;
-
-    result->num_subfunctions = c->rules->size;
-    result->functions = BJAM_MALLOC( c->rules->size * sizeof( SUBFUNCTION ) );
-    for ( i = 0; i < c->rules->size; ++i )
+    if ( !result )
     {
-        struct stored_rule * const rule = &dynamic_array_at( struct stored_rule,
-            c->rules, i );
-        result->functions[ i ].name = rule->name;
-        result->functions[ i ].code = function_compile( rule->parse );
-        result->functions[ i ].code->num_formal_arguments = rule->num_arguments;
-        result->functions[ i ].code->formal_arguments = rule->arguments;
-        result->functions[ i ].local = rule->local;
+        result = BJAM_MALLOC( sizeof( JAM_FUNCTION ) );
+        memset( result, 0, sizeof( JAM_FUNCTION ) );
+
+        result->base.type = FUNCTION_JAM;
+        result->base.reference_count = 1;
+
+        result->line = -1;
     }
 
-    result->actions = BJAM_MALLOC( c->actions->size * sizeof( SUBACTION ) );
-    memcpy( result->actions, c->actions->data, c->actions->size * sizeof(
-        SUBACTION ) );
-    result->num_subactions = c->actions->size;
+    if ( c )
+    {
+        int i;
 
-    result->generic = 0;
+        assert( !result->code );
 
-    result->file = 0;
-    result->line = -1;
+        result->code_size = c->code->size;
+        result->code = BJAM_MALLOC( c->code->size * sizeof( instruction ) );
+        memcpy( result->code, c->code->data, c->code->size * sizeof( instruction ) );
+
+        result->constants = BJAM_MALLOC( c->constants->size * sizeof( OBJECT * ) );
+        memcpy( result->constants, c->constants->data, c->constants->size *
+            sizeof( OBJECT * ) );
+        result->num_constants = c->constants->size;
+
+        result->num_subfunctions = c->rules->size;
+        result->functions = BJAM_MALLOC( c->rules->size * sizeof( SUBFUNCTION ) );
+        for ( i = 0; i < c->rules->size; ++i )
+        {
+            struct stored_rule * const rule = &dynamic_array_at( struct
+                stored_rule, c->rules, i );
+            result->functions[ i ].name = rule->name;
+            result->functions[ i ].code = function_compile( rule->parse );
+            result->functions[ i ].code->num_formal_arguments = rule->num_arguments;
+            result->functions[ i ].code->formal_arguments = rule->arguments;
+            result->functions[ i ].local = rule->local;
+        }
+
+        result->actions = BJAM_MALLOC( c->actions->size * sizeof( SUBACTION ) );
+        memcpy( result->actions, c->actions->data, c->actions->size * sizeof(
+            SUBACTION ) );
+        result->num_subactions = c->actions->size;
+    }
 
     return result;
 }
@@ -2856,18 +2864,45 @@ FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int flags ),
     return (FUNCTION *)result;
 }
 
-FUNCTION * function_compile( PARSE * parse )
+FUNCTION * function_compile_internal( PARSE * parse, JAM_FUNCTION * result, int
+    compile_now )
 {
-    compiler c[ 1 ];
-    JAM_FUNCTION * result;
-    compiler_init( c );
-    compile_parse( parse, c, RESULT_RETURN );
-    compile_emit( c, INSTR_RETURN, 0 );
-    result = compile_to_function( c );
-    compiler_free( c );
+    if ( compile_now )
+    {
+        compiler c[ 1 ];
+        compiler_init( c );
+
+        assert( !( parse && ( result && result->parse ) ) );
+        if ( !parse )
+        {
+            assert( result && result->parse );
+            parse = result->parse;
+        }
+        compile_parse( parse, c, RESULT_RETURN );
+        compile_emit( c, INSTR_RETURN, 0 );
+        result = compile_to_function( c, result );
+        compiler_free( c );
+        if ( result->parse )
+        {
+            parse_free( result->parse );
+            result->parse = 0;
+        }
+    }
+    else
+    {
+        result = compile_to_function( 0, result );
+        if ( result->parse )
+            parse_free( result->parse );
+        parse_refer( result->parse = parse );
+    }
     result->file = object_copy( parse->file );
     result->line = parse->line;
     return (FUNCTION *)result;
+}
+
+FUNCTION * function_compile( PARSE * parse )
+{
+    return function_compile_internal( parse, 0, 1 );
 }
 
 FUNCTION * function_compile_actions( char const * actions, OBJECT * file,
@@ -2883,7 +2918,7 @@ FUNCTION * function_compile_actions( char const * actions, OBJECT * file,
     var_parse_actions_compile( parse, c );
     var_parse_actions_free( parse );
     compile_emit( c, INSTR_RETURN, 0 );
-    result = compile_to_function( c );
+    result = compile_to_function( c, 0 );
     compiler_free( c );
     result->file = object_copy( file );
     result->line = line;
@@ -3491,6 +3526,8 @@ FUNCTION * function_bind_variables( FUNCTION * f, module_t * module,
         instruction * code;
         int i;
         assert( f->type == FUNCTION_JAM );
+        if ( !func->code )
+            function_compile_internal( 0, func, 1 ); /* JIT compile */
         memcpy( new_func, func, sizeof( JAM_FUNCTION ) );
         new_func->base.reference_count = 1;
         new_func->base.formal_arguments = argument_list_bind_variables(
@@ -3577,6 +3614,8 @@ void function_free( FUNCTION * function_ )
         JAM_FUNCTION * func = (JAM_FUNCTION *)function_;
 
         BJAM_FREE( func->code );
+        if ( func->parse )
+            parse_free( func->parse );
 
         if ( func->generic )
             function_free( func->generic );
@@ -3689,6 +3728,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             function_->num_formal_arguments, function_, frame, s );
 
     function = (JAM_FUNCTION *)function_;
+    if ( !function->code )
+        function_compile_internal( 0, function, 1 ); /* JIT compile */
     code = function->code;
     for ( ; ; )
     {
