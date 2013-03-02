@@ -99,27 +99,14 @@ rule compile.c++ ( targets * : sources * : properties * )
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
     gcc.setup-address-model $(targets) : $(sources) : $(properties) ;
 
-    local pth-file = [ on $(<) return $(PCH_FILE) ] ;
+    SPACE on $(targets) = " " ;
 
-    if $(pth-file)
-    {
-        DEPENDS $(<) : $(pth-file) ;
-        clang-linux.compile.c++.with-pch $(targets) : $(sources) ;
-    }
-    else
-    {
-        clang-linux.compile.c++.without-pth $(targets) : $(sources) ;
-    }
+    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
 }
 
-actions compile.c++.without-pth
+actions compile.c++ bind PCH_FILE
 {
-    "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
-}
-
-actions compile.c++.with-pch bind PCH_FILE
-{
-    "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -include-pth -Xclang "$(PCH_FILE)" -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang$(SPACE)-include-pth$(SPACE)-Xclang$(SPACE)"$(PCH_FILE)" -o "$(<)" "$(>)"
 }
 
 rule compile.c ( targets * : sources * : properties * )
@@ -128,27 +115,14 @@ rule compile.c ( targets * : sources * : properties * )
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
     gcc.setup-address-model $(targets) : $(sources) : $(properties) ;
 
-    local pth-file = [ on $(<) return $(PCH_FILE) ] ;
+    SPACE on $(targets) = " " ;
 
-    if $(pth-file)
-    {
-        DEPENDS $(<) : $(pth-file) ;
-        clang-linux.compile.c.with-pch $(targets) : $(sources) ;
-    }
-    else
-    {
-        clang-linux.compile.c.without-pth $(targets) : $(sources) ;
-    }
+    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
 }
 
-actions compile.c.without-pth
+actions compile.c bind PCH_FILE
 {
-    "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
-}
-
-actions compile.c.with-pch bind PCH_FILE
-{
-    "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -include-pth -Xclang "$(PCH_FILE)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang$(SPACE)-include-pth$(SPACE)-Xclang$(SPACE)"$(PCH_FILE)" -c -o "$(<)" "$(>)"
 }
 
 ###############################################################################
@@ -180,8 +154,6 @@ actions compile.c.pch
 
 ###############################################################################
 # Linking
-
-SPACE = " " ;
 
 rule link ( targets * : sources * : properties * )
 {
