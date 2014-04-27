@@ -21,12 +21,15 @@ static unsigned get_bucket( unsigned size )
 {
     unsigned bucket = 0;
     while ( size > ( 1u << bucket ) ) ++bucket;
+    assert( bucket < 32 );
     return bucket;
 }
 
 static LIST * list_alloc( unsigned const size )
 {
     unsigned const bucket = get_bucket( size );
+    assert( size != 0 );
+
 #ifndef BJAM_NO_MEM_CACHE
     if ( freelist[ bucket ] )
     {
