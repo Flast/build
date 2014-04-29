@@ -53,6 +53,7 @@ void parse_file( OBJECT * f, FRAME * frame )
 
         /* Run the parse tree. */
         func = function_compile( p );
+        dump_instruction( func );
         parse_free( p );
         list_free( function_run( func, frame, stack_global() ) );
         function_free( func );

@@ -193,6 +193,7 @@ typedef struct _jam_function
     int line;
 } JAM_FUNCTION;
 
+FILE * insn_fp;
 
 #ifdef HAVE_PYTHON
 
@@ -1441,6 +1442,157 @@ static int compile_emit_actions( compiler * c, PARSE * parse )
     a.flags = parse->num;
     dynamic_array_push( c->actions, a );
     return (int)( c->actions->size - 1 );
+}
+
+#define _put( pattern, ... ) \
+    fprintf( insn_fp, "\t" pattern "\n", __VA_ARGS__ )
+
+static void puti( const char * i )
+{
+    _put( "%s", i );
+}
+static void putia( const char * i, int a )
+{
+    _put( "%s\t%d", i, a );
+}
+
+static const char * __stack_subscript( char * buffer, size_t buffer_size, int i, const char *opt )
+{
+    snprintf( buffer, 128, "stack[%d%s]", i, opt );
+    return buffer;
+}
+
+static void put_insn( unsigned op_code, int arg, const JAM_FUNCTION * function )
+{
+#define pop( x ) __stack_subscript( alloca( 128 ), 128, x, "" )
+#define at( x ) __stack_subscript( alloca( 128 ), 128, x, ":no pop" )
+    switch ( op_code )
+    {
+    case INSTR_PUSH_EMPTY     : puti( "push\tempty" );                     break;
+    case INSTR_PUSH_CONSTANT  : putia( "push\tconst", arg );               break;
+    case INSTR_PUSH_ARG       : putia( "push\targ", arg );                 break;
+    case INSTR_PUSH_VAR       : putia( "push\tvar", arg );                 break;
+    case INSTR_PUSH_VAR_FIXED : putia( "push\tvar-fixed", arg );           break;
+    case INSTR_PUSH_GROUP     : puti( "push\tgroup" );                     break;
+    case INSTR_PUSH_RESULT    : puti( "push\tresult" );                    break;
+    case INSTR_PUSH_APPEND    : puti( "push\tappend" );                    break;
+    case INSTR_SWAP           : _put( "swap\t%s, %s", at(arg), at(0) ); break;
+
+    case INSTR_JUMP_EMPTY     : _put( "jump\t%+d if %s is empty",     arg + 1, pop(0) ); break;
+    case INSTR_JUMP_NOT_EMPTY : _put( "jump\t%+d if %s is not empty", arg + 1, pop(0) ); break;
+
+    case INSTR_JUMP    : _put( "jump\t%+d",             arg + 1 );                 break;
+    case INSTR_JUMP_LT : _put( "jump\t%+d if %s < %s",  arg + 1, pop(1), pop(0) ); break;
+    case INSTR_JUMP_LE : _put( "jump\t%+d if %s <= %s", arg + 1, pop(1), pop(0) ); break;
+    case INSTR_JUMP_GT : _put( "jump\t%+d if %s > %s",  arg + 1, pop(1), pop(0) ); break;
+    case INSTR_JUMP_GE : _put( "jump\t%+d if %s >= %s", arg + 1, pop(1), pop(0) ); break;
+    case INSTR_JUMP_EQ : _put( "jump\t%+d if %s = %s",  arg + 1, pop(1), pop(0) ); break;
+    case INSTR_JUMP_NE : _put( "jump\t%+d if %s != %s", arg + 1, pop(1), pop(0) ); break;
+    //case INSTR_JUMP_IN:
+    //case INSTR_JUMP_NOT_IN:
+
+    //case INSTR_JUMP_NOT_GLOB:
+
+    //case INSTR_FOR_INIT:
+    //case INSTR_FOR_LOOP:
+
+    case INSTR_SET_RESULT : _put( "set\tresult%s", arg ? " without pop" : "" ); break;
+    case INSTR_RETURN     : puti( "return" );                                   break;
+    case INSTR_POP        : puti( "pop" );                                      break;
+
+    case INSTR_PUSH_LOCAL : _put( "push\tlocal[%d]", arg ); break;
+    case INSTR_POP_LOCAL  : _put( "pop\tlocal[%d]",  arg ); break;
+    //case INSTR_SET:
+    //case INSTR_APPEND:
+    //case INSTR_DEFAULT:
+
+    //case INSTR_PUSH_LOCAL_FIXED:
+    //case INSTR_POP_LOCAL_FIXED:
+    //case INSTR_SET_FIXED:
+    //case INSTR_APPEND_FIXED:
+    //case INSTR_DEFAULT_FIXED:
+
+    //case INSTR_PUSH_LOCAL_GROUP:
+    //case INSTR_POP_LOCAL_GROUP:
+    //case INSTR_SET_GROUP:
+    //case INSTR_APPEND_GROUP:
+    //case INSTR_DEFAULT_GROUP:
+
+    //case INSTR_PUSH_ON:
+    //case INSTR_POP_ON:
+    //case INSTR_SET_ON:
+    //case INSTR_APPEND_ON:
+    //case INSTR_DEFAULT_ON:
+    //case INSTR_GET_ON:
+
+    //case INSTR_CALL_RULE:
+    //case INSTR_CALL_MEMBER_RULE:
+
+    //case INSTR_APPLY_MODIFIERS:
+    //case INSTR_APPLY_INDEX:
+    //case INSTR_APPLY_INDEX_MODIFIERS:
+    //case INSTR_APPLY_MODIFIERS_GROUP:
+    //case INSTR_APPLY_INDEX_GROUP:
+    //case INSTR_APPLY_INDEX_MODIFIERS_GROUP:
+    //case INSTR_COMBINE_STRINGS:
+    //case INSTR_GET_GRIST:
+
+    //case INSTR_INCLUDE:
+    case INSTR_RULE:
+        assert( function );
+        if ( arg < function->num_subfunctions )
+            _put( "rule\t%s", object_str( function->functions[ arg ].name ) );
+        else
+            putia( "rule", arg );
+        break;
+    //case INSTR_ACTIONS:
+    //case INSTR_PUSH_MODULE:
+    //case INSTR_POP_MODULE:
+    //case INSTR_CLASS:
+    //case INSTR_BIND_MODULE_VARIABLES:
+
+    //case INSTR_APPEND_STRINGS:
+    //case INSTR_WRITE_FILE:
+    //case INSTR_OUTPUT_STRINGS:
+    default:
+        fprintf( insn_fp, "\t%u\t%d\n", op_code, arg );
+        return;
+    }
+#undef at
+#undef pop
+}
+
+static void dump_instruction_raw( const char * rulename, const JAM_FUNCTION * f )
+{
+    int i;
+
+    const char * file = f->file ? object_str( f->file ) : "<<unknown file>>";
+    fprintf( insn_fp, "\n%s: (%s:%d)\n", rulename, file, f->line );
+    for ( i = 0; i < f->code_size; ++i )
+    {
+        instruction insn = f->code[ i ];
+        put_insn( insn.op_code, insn.arg, f );
+    }
+}
+
+void dump_instruction( const FUNCTION * function )
+{
+    const JAM_FUNCTION * f = ( const JAM_FUNCTION * )function;
+    int i;
+
+    if ( ! f || ! insn_fp ) return;
+
+    dump_instruction_raw( "## root ##", f );
+
+    for ( i = 0; i < f->num_subfunctions; ++i )
+    {
+        const SUBFUNCTION * sf = f->functions + i;
+
+        if ( sf->code->type != FUNCTION_JAM ) continue;
+
+        dump_instruction_raw( object_str( sf->name ), ( JAM_FUNCTION * )sf->code );
+    }
+    fprintf( insn_fp, "\n" );
 }
 
 static JAM_FUNCTION * compile_to_function( compiler * c )
@@ -4863,8 +5015,21 @@ static LIST * call_python_function( PYTHON_FUNCTION * function, FRAME * frame )
 
 #endif
 
+void function_insn( OBJECT * filename )
+{
+    insn_fp = fopen( object_str( filename ), "w+" );
+    object_free( filename );
+}
 
 void function_done( void )
 {
+    unsigned const remain = (1u << 21) - (( char * )stack_global()->data - ( char * )stack);
+    unsigned i = remain / sizeof( LIST * );
+    if ( i ) printf( "warning: stack is not fully poped\n" );
+    while ( i-- )
+    {
+        list_free( stack_pop( stack_global() ) );
+    }
     BJAM_FREE( stack );
+    if ( insn_fp ) fclose( insn_fp );
 }

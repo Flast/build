@@ -235,7 +235,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     --argc;
     ++argv;
 
-    if ( getoptions( argc, argv, "-:l:m:d:j:p:f:gs:t:ano:qv", optv ) < 0 )
+    if ( getoptions( argc, argv, "-:l:m:d:j:p:f:gs:t:ano:qvi:", optv ) < 0 )
     {
         printf( "\nusage: %s [ options ] targets...\n\n", progname );
 
@@ -342,6 +342,12 @@ int main( int argc, char * * argv, char * * arg_environ )
             globs.debug[ i ] = 1;
         else while ( i )
             globs.debug[ i-- ] = 1;
+    }
+
+    if ( ( s = getoptval( optv, 'i', 0 ) ) )
+    {
+        OBJECT * const filename = object_new( s );
+        function_insn( filename );
     }
 
     constants_init();
