@@ -1415,7 +1415,16 @@ static void compile_emit_branch( compiler * c, unsigned int op_code, int label )
 
 static int compile_emit_constant( compiler * c, OBJECT * value )
 {
-    OBJECT * copy = object_copy( value );
+    OBJECT * copy;
+    int i;
+
+    for ( i = 0; i < c->constants->size; ++i )
+    {
+        if ( object_equal( dynamic_array_at( OBJECT *, c->constants, i ), value ) )
+            return i;
+    }
+
+    copy = object_copy( value );
     dynamic_array_push( c->constants, copy );
     return c->constants->size - 1;
 }

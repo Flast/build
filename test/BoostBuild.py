@@ -282,6 +282,9 @@ class Tester(TestCmd.TestCmd):
                 print("Cannot find built Boost.Jam")
                 sys.exit(1)
 
+        if ("HOME" in os.environ):
+            os.environ["HOME"] = "/tmp/path/to/non/existing/home/"
+
         verbosity = ["-d0", "--quiet"]
         if not pass_d0:
             verbosity = []
