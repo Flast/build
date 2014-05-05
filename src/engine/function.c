@@ -1444,8 +1444,11 @@ static int compile_emit_actions( compiler * c, PARSE * parse )
     return (int)( c->actions->size - 1 );
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvariadic-macros"
 #define _put( pattern, ... ) \
     fprintf( insn_fp, "\t" pattern "\n", __VA_ARGS__ )
+#pragma GCC diagnostic pop
 
 static void puti( const char * i )
 {
