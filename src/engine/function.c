@@ -1507,9 +1507,27 @@ static void put_insn( unsigned op_code, int arg, const JAM_FUNCTION * function )
 
     case INSTR_PUSH_LOCAL : _put( "push\tlocal[%d]", arg ); break;
     case INSTR_POP_LOCAL  : _put( "pop\tlocal[%d]",  arg ); break;
-    //case INSTR_SET:
-    //case INSTR_APPEND:
-    //case INSTR_DEFAULT:
+    case INSTR_SET:
+        //assert( arg < function->num_constants );
+        if ( arg < function->num_constants )
+            _put( "set\t%d(%s)", arg, object_str( function->constants[ arg ] ) );
+        else
+            putia( "set", arg );
+        break;
+    case INSTR_APPEND:
+        //assert( arg < function->num_constants );
+        if ( arg < function->num_constants )
+            _put( "append\t%d(%s)", arg, object_str( function->constants[ arg ] ) );
+        else
+            putia( "append", arg );
+        break;
+    case INSTR_DEFAULT:
+        //assert( arg < function->num_constants );
+        if ( arg < function->num_constants )
+            _put( "set\t%d(%s) as default", arg, object_str( function->constants[ arg ] ) );
+        else
+            _put( "set\t%d as default", arg );
+        break;
 
     //case INSTR_PUSH_LOCAL_FIXED:
     //case INSTR_POP_LOCAL_FIXED:
