@@ -1467,6 +1467,8 @@ static const char * __stack_subscript( char * buffer, size_t buffer_size, int i,
 
 static void put_insn( unsigned op_code, int arg, const JAM_FUNCTION * function )
 {
+    assert( function );
+
 #define pop( x ) __stack_subscript( alloca( 128 ), 128, x, "" )
 #define at( x ) __stack_subscript( alloca( 128 ), 128, x, ":no pop" )
     switch ( op_code )
@@ -1542,7 +1544,7 @@ static void put_insn( unsigned op_code, int arg, const JAM_FUNCTION * function )
 
     //case INSTR_INCLUDE:
     case INSTR_RULE:
-        assert( function );
+        //assert( arg < function->num_subfunctions )
         if ( arg < function->num_subfunctions )
             _put( "rule\t%s", object_str( function->functions[ arg ].name ) );
         else
