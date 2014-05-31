@@ -291,7 +291,7 @@ LIST * frame_get_local( FRAME * frame, int idx )
     return list_copy( lol_get( frame->args, idx ) );
 }
 
-static OBJECT * function_get_constant( JAM_FUNCTION * function, int idx )
+static OBJECT * function_get_constant( const JAM_FUNCTION * function, int idx )
 {
     return function->constants[ idx ];
 }
@@ -1474,9 +1474,9 @@ static const char * __stack_subscript( char * buffer, size_t buffer_size, int i,
     return buffer;
 }
 
-static void put_insn( unsigned op_code, int arg, const JAM_FUNCTION * function )
+static void put_insn( unsigned op_code, int arg, const JAM_FUNCTION * f )
 {
-    assert( function );
+    assert( f );
 
 #define pop( x ) __stack_subscript( alloca( 128 ), 128, x, "" )
 #define at( x ) __stack_subscript( alloca( 128 ), 128, x, ":no pop" )
@@ -1517,23 +1517,23 @@ static void put_insn( unsigned op_code, int arg, const JAM_FUNCTION * function )
     case INSTR_PUSH_LOCAL : _put( "push\tlocal[%d]", arg ); break;
     case INSTR_POP_LOCAL  : _put( "pop\tlocal[%d]",  arg ); break;
     case INSTR_SET:
-        //assert( arg < function->num_constants );
-        if ( arg < function->num_constants )
-            _put( "set\t%d(%s)", arg, object_str( function->constants[ arg ] ) );
+        //assert( arg < f->num_constants );
+        if ( arg < f->num_constants )
+            _put( "set\t%d(%s)", arg, object_str( function_get_constant( f, arg ) ) );
         else
             putia( "set", arg );
         break;
     case INSTR_APPEND:
-        //assert( arg < function->num_constants );
-        if ( arg < function->num_constants )
-            _put( "append\t%d(%s)", arg, object_str( function->constants[ arg ] ) );
+        //assert( arg < f->num_constants );
+        if ( arg < f->num_constants )
+            _put( "append\t%d(%s)", arg, object_str( function_get_constant( f, arg ) ) );
         else
             putia( "append", arg );
         break;
     case INSTR_DEFAULT:
-        //assert( arg < function->num_constants );
-        if ( arg < function->num_constants )
-            _put( "set\t%d(%s) as default", arg, object_str( function->constants[ arg ] ) );
+        //assert( arg < f->num_constants );
+        if ( arg < f->num_constants )
+            _put( "set\t%d(%s) as default", arg, object_str( function_get_constant( f, arg ) ) );
         else
             _put( "set\t%d as default", arg );
         break;
@@ -1571,9 +1571,9 @@ static void put_insn( unsigned op_code, int arg, const JAM_FUNCTION * function )
 
     //case INSTR_INCLUDE:
     case INSTR_RULE:
-        //assert( arg < function->num_subfunctions )
-        if ( arg < function->num_subfunctions )
-            _put( "rule\t%s", object_str( function->functions[ arg ].name ) );
+        //assert( arg < f->num_subfunctions )
+        if ( arg < f->num_subfunctions )
+            _put( "rule\t%s", object_str( f->functions[ arg ].name ) );
         else
             putia( "rule", arg );
         break;
