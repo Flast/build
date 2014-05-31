@@ -1474,7 +1474,7 @@ static const char * __stack_subscript( char * buffer, size_t buffer_size, int i,
     return buffer;
 }
 
-static void put_insn( unsigned op_code, int arg, const JAM_FUNCTION * f )
+static int put_insn( unsigned op_code, int arg, const JAM_FUNCTION * f, int i )
 {
     assert( f );
 
@@ -1557,8 +1557,16 @@ static void put_insn( unsigned op_code, int arg, const JAM_FUNCTION * f )
     //case INSTR_DEFAULT_ON:
     //case INSTR_GET_ON:
 
-    //case INSTR_CALL_RULE:
-    //case INSTR_CALL_MEMBER_RULE:
+    case INSTR_CALL_RULE:
+        assert( f->code[i + 1].op_code < f->num_constants );
+        _put( "call\t%s(%d)", object_str( function_get_constant( f, f->code[i + 1].op_code ) ), arg );
+        ++i;
+        break;
+    case INSTR_CALL_MEMBER_RULE:
+        assert( f->code[i + 1].op_code < f->num_constants );
+        _put( "call\tobj->%s(%d)", object_str( function_get_constant( f, f->code[i + 1].op_code ) ), arg );
+        ++i;
+        break;
 
     //case INSTR_APPLY_MODIFIERS:
     //case INSTR_APPLY_INDEX:
@@ -1588,8 +1596,10 @@ static void put_insn( unsigned op_code, int arg, const JAM_FUNCTION * f )
     //case INSTR_OUTPUT_STRINGS:
     default:
         fprintf( insn_fp, "\t%u\t%d\n", op_code, arg );
-        return;
+        break;
     }
+
+    return i;
 #undef at
 #undef pop
 }
@@ -1603,7 +1613,7 @@ static void dump_instruction_raw( const char * rulename, const JAM_FUNCTION * f 
     for ( i = 0; i < f->code_size; ++i )
     {
         instruction insn = f->code[ i ];
-        put_insn( insn.op_code, insn.arg, f );
+        i = put_insn( insn.op_code, insn.arg, f, i );
     }
 }
 
