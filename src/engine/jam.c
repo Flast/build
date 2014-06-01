@@ -150,7 +150,7 @@ struct globs globs =
 };
 
 /* Symbols to be defined as true for use in Jambase. */
-static char * othersyms[] = { OSMAJOR, OSMINOR, OSPLAT, JAMVERSYM, 0 };
+static const char * othersyms[] = { OSMAJOR, OSMINOR, OSPLAT, JAMVERSYM, 0 };
 
 
 /* Known for sure:
@@ -215,7 +215,7 @@ char const * saved_argv0;
 int main( int argc, char * * argv, char * * arg_environ )
 {
     int                     n;
-    char                  * s;
+    const char            * s;
     struct bjam_option      optv[ N_OPTS ];
     char            const * all = "all";
     int                     status;
@@ -452,7 +452,7 @@ int main( int argc, char * * argv, char * * arg_environ )
         /* Load up variables set on command line. */
         for ( n = 0; ( s = getoptval( optv, 's', n ) ); ++n )
         {
-            char * symv[ 2 ];
+            const char * symv[ 2 ];
             symv[ 0 ] = s;
             symv[ 1 ] = 0;
             var_defines( root_module(), symv, 1 );
@@ -473,7 +473,7 @@ int main( int argc, char * * argv, char * * arg_environ )
         {
             if ( arg_v[ n ][ 0 ] == '-' )
             {
-                char * f = "-:l:d:j:f:gs:t:ano:qv";
+                const char * f = "-:l:d:j:f:gs:t:ano:qv";
                 for ( ; *f; ++f ) if ( *f == arg_v[ n ][ 1 ] ) break;
                 if ( ( f[ 1 ] == ':' ) && ( arg_v[ n ][ 2 ] == '\0' ) ) ++n;
             }

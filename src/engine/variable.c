@@ -57,7 +57,7 @@ struct _variable
 };
 
 static LIST * * var_enter( struct module_t *, OBJECT * symbol );
-static void var_dump( OBJECT * symbol, LIST * value, char * what );
+static void var_dump( OBJECT * symbol, LIST * value, const char * what );
 
 
 /*
@@ -70,7 +70,7 @@ static void var_dump( OBJECT * symbol, LIST * value, char * what );
  * Otherwise, split the value at blanks.
  */
 
-void var_defines( struct module_t * module, char * const * e, int preprocess )
+void var_defines( struct module_t * module, const char * const * e, int preprocess )
 {
     string buf[ 1 ];
 
@@ -80,7 +80,7 @@ void var_defines( struct module_t * module, char * const * e, int preprocess )
     {
         char * val;
 
-        if ( ( val = strchr( *e, '=' ) )
+        if ( ( val = strchr( ( char * )*e, '=' ) )
 #if defined( OS_MAC )
             /* On the mac (MPW), the var=val is actually var\0val */
             /* Think different. */
@@ -317,7 +317,7 @@ static LIST * * var_enter( struct module_t * module, OBJECT * symbol )
  * var_dump() - dump a variable to stdout
  */
 
-static void var_dump( OBJECT * symbol, LIST * value, char * what )
+static void var_dump( OBJECT * symbol, LIST * value, const char * what )
 {
     printf( "%s %s = ", what, object_str( symbol ) );
     list_print( value );

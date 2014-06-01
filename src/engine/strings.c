@@ -212,7 +212,7 @@ void string_unit_test()
     }
 
     {
-        char * const original = "  \n\t\v  Foo \r\n\v \tBar\n\n\r\r\t\n\v\t \t";
+        const char * const original = "  \n\t\v  Foo \r\n\v \tBar\n\n\r\r\t\n\v\t \t";
         string copy[ 1 ];
         string_copy( copy, original );
         assert( !strcmp( copy->value, original ) );

@@ -17,7 +17,7 @@
  *        was supplied for an option that does not require one."
  */
 
-int getoptions( int argc, char * * argv, char * opts, bjam_option * optv )
+int getoptions( int argc, char * * argv, const char * opts, bjam_option * optv )
 {
     int i;
     int optc = N_OPTS;
@@ -40,7 +40,7 @@ int getoptions( int argc, char * * argv, char * opts, bjam_option * optv )
 
         for ( arg = &argv[ i ][ 1 ]; *arg; ++arg )
         {
-            char * f;
+            const char * f;
 
             for ( f = opts; *f; ++f )
                 if ( *f == *arg )
@@ -84,7 +84,7 @@ int getoptions( int argc, char * * argv, char * opts, bjam_option * optv )
  * Name: getoptval() - find an option given its character.
  */
 
-char * getoptval( bjam_option * optv, char opt, int subopt )
+const char * getoptval( bjam_option * optv, char opt, int subopt )
 {
     int i;
     for ( i = 0; i < N_OPTS; ++i, ++optv )

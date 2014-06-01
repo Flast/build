@@ -19,8 +19,8 @@
 
 struct keyword
 {
-    char * word;
-    int    type;
+    const char * word;
+    int          type;
 } keywords[] =
 {
 #include "jamgramtab.h"
@@ -30,13 +30,13 @@ struct keyword
 typedef struct include include;
 struct include
 {
-    include   * next;        /* next serial include file */
-    char      * string;      /* pointer into current line */
-    char    * * strings;     /* for yyfparse() -- text to parse */
-    FILE      * file;        /* for yyfparse() -- file being read */
-    OBJECT    * fname;       /* for yyfparse() -- file name */
-    int         line;        /* line counter for error messages */
-    char        buf[ 512 ];  /* for yyfparse() -- line buffer */
+    include      * next;        /* next serial include file */
+    const char   * string;      /* pointer into current line */
+    const char * * strings;     /* for yyfparse() -- text to parse */
+    FILE         * file;        /* for yyfparse() -- file being read */
+    OBJECT       * fname;       /* for yyfparse() -- file name */
+    int            line;        /* line counter for error messages */
+    char           buf[ 512 ];  /* for yyfparse() -- line buffer */
 };
 
 static include * incp = 0;  /* current file; head of chain */
