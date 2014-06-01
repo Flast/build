@@ -208,7 +208,7 @@ toolset darwin cc :  "-o " : -D
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## GCC 2.x, 3.x, 4.x
 toolset gcc gcc : "-o " : -D
-    : -pedantic -fno-strict-aliasing
+    : -x c++ -pedantic -fno-strict-aliasing -fpermissive -fno-exceptions
     [ opt --release : [ opt --symbols : -g : -s ] -O3 ]
     [ opt --debug : -g -O0 -fno-inline ]
     [ opt --profile : -O3 -g -pg ]

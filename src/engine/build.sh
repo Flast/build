@@ -131,6 +131,7 @@ case $BOOST_JAM_TOOLSET in
 
     gcc)
     BOOST_JAM_CC=gcc
+    BOOST_JAM_OPT_JAM="${BOOST_JAM_OPT_JAM} -x c++ -fpermissive -fno-exceptions"
     ;;
 
     darwin)
