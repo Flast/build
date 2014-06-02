@@ -233,30 +233,32 @@ static void check_alignment( STACK * s )
     assert( (size_t)s->data % sizeof( LIST * ) == 0 );
 }
 
-void * stack_allocate( STACK * s, int size )
+template <typename T>
+T * stack_allocate( STACK * s, int count )
 {
     check_alignment( s );
-    s->data = (char *)s->data - size;
+    s->data = static_cast<T *>(s->data) - count;
     check_alignment( s );
-    return s->data;
+    return static_cast<T *>(s->data);
 }
 
-void stack_deallocate( STACK * s, int size )
+template <typename T>
+void stack_deallocate( STACK * s, int count )
 {
     check_alignment( s );
-    s->data = (char *)s->data + size;
+    s->data = static_cast<T *>(s->data) + count;
     check_alignment( s );
 }
 
 void stack_push( STACK * s, LIST * l )
 {
-    *(LIST * *)stack_allocate( s, sizeof( LIST * ) ) = l;
+    *stack_allocate<LIST *>( s, 1 ) = l;
 }
 
 LIST * stack_pop( STACK * s )
 {
     LIST * const result = *(LIST * *)s->data;
-    stack_deallocate( s, sizeof( LIST * ) );
+    stack_deallocate<LIST *>( s, 1 );
     return result;
 }
 
@@ -854,8 +856,8 @@ static int expand_modifiers( STACK * s, int n )
 
     if ( total != 0 )
     {
-        VAR_EDITS * out = stack_allocate( s, total * sizeof( VAR_EDITS ) );
-        LISTITER * iter = stack_allocate( s, n * sizeof( LIST * ) );
+        VAR_EDITS * out = stack_allocate<VAR_EDITS>( s, total );
+        LISTITER * iter = stack_allocate<LISTITER>( s, n );
         for ( i = 0; i < n; ++i )
             iter[ i ] = list_begin( args[ i ] );
         i = 0;
@@ -878,7 +880,7 @@ static int expand_modifiers( STACK * s, int n )
                 iter[ i ] = list_begin( args[ i ] );
             }
         }
-        stack_deallocate( s, n * sizeof( LIST * ) );
+        stack_deallocate<LIST *>( s, n );
     }
     return total;
 }
@@ -3655,9 +3657,9 @@ static char check_ptr_size2[ sizeof(char *) <= sizeof(void *) ? 1 : -1 ];
 void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s,
     string * out )
 {
-    *(string * *)stack_allocate( s, sizeof( string * ) ) = out;
+    *stack_allocate<string *>( s, 1 ) = out;
     list_free( function_run( function, frame, s ) );
-    stack_deallocate( s, sizeof( string * ) );
+    stack_deallocate<string *>( s, 1 );
 }
 
 /*
@@ -3853,14 +3855,13 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
         case INSTR_FOR_INIT:
             l = stack_top( s );
-            *(LISTITER *)stack_allocate( s, sizeof( LISTITER ) ) =
-                list_begin( l );
+            *stack_allocate<LISTITER>( s, 1 ) = list_begin( l );
             break;
 
         case INSTR_FOR_LOOP:
         {
             LISTITER iter = *(LISTITER *)stack_get( s );
-            stack_deallocate( s, sizeof( LISTITER ) );
+            stack_deallocate<LISTITER>( s, 1 );
             l = stack_top( s );
             if ( iter == list_end( l ) )
             {
@@ -3871,7 +3872,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             {
                 r = list_new( object_copy( list_item( iter ) ) );
                 iter = list_next( iter );
-                *(LISTITER *)stack_allocate( s, sizeof( LISTITER ) ) = iter;
+                *stack_allocate<LISTITER>( s, 1 ) = iter;
                 stack_push( s, r );
             }
             break;
@@ -4272,7 +4273,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             stack_push( s, l );
             l = apply_modifiers( s, n );
             list_free( stack_pop( s ) );
-            stack_deallocate( s, n * sizeof( VAR_EDITS ) );
+            stack_deallocate<VAR_EDITS>( s, n );
             for ( i = 0; i < code->arg; ++i )
                 list_free( stack_pop( s ) );  /* pop modifiers */
             stack_push( s, l );
@@ -4298,7 +4299,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             l = apply_subscript_and_modifiers( s, n );
             list_free( stack_pop( s ) );
             list_free( stack_pop( s ) );
-            stack_deallocate( s, n * sizeof( VAR_EDITS ) );
+            stack_deallocate<VAR_EDITS>( s, n );
             for ( i = 0; i < code->arg; ++i )
                 list_free( stack_pop( s ) );  /* pop modifiers */
             stack_push( s, l );
@@ -4321,7 +4322,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 list_free( stack_pop( s ) );
             }
             list_free( vars );
-            stack_deallocate( s, n * sizeof( VAR_EDITS ) );
+            stack_deallocate<VAR_EDITS>( s, n );
             for ( i = 0; i < code->arg; ++i )
                 list_free( stack_pop( s ) );  /* pop modifiers */
             stack_push( s, result );
@@ -4367,7 +4368,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             }
             list_free( stack_pop( s ) );
             list_free( vars );
-            stack_deallocate( s, n * sizeof( VAR_EDITS ) );
+            stack_deallocate<VAR_EDITS>( s, n );
             for ( i = 0; i < code->arg; ++i )
                 list_free( stack_pop( s ) );  /* pop modifiers */
             stack_push( s, result );
@@ -4376,15 +4377,15 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
         case INSTR_COMBINE_STRINGS:
         {
-            size_t const buffer_size = code->arg * sizeof( expansion_item );
+            size_t const buffer_count = code->arg;
             LIST * * const stack_pos = stack_get( s );
-            expansion_item * items = stack_allocate( s, buffer_size );
+            expansion_item * items = stack_allocate<expansion_item>( s, buffer_count );
             LIST * result;
             int i;
             for ( i = 0; i < code->arg; ++i )
                 items[ i ].values = stack_pos[ i ];
             result = expand( items, code->arg );
-            stack_deallocate( s, buffer_size );
+            stack_deallocate<expansion_item>( s, buffer_count );
             for ( i = 0; i < code->arg; ++i )
                 list_free( stack_pop( s ) );
             stack_push( s, result );
@@ -4466,15 +4467,14 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 ? bindmodule( list_front( module_name ) )
                 : root_module();
             list_free( module_name );
-            *(module_t * *)stack_allocate( s, sizeof( module_t * ) ) =
-                outer_module;
+            *stack_allocate<module_t *>( s, 1 ) = outer_module;
             break;
         }
 
         case INSTR_POP_MODULE:
         {
             module_t * const outer_module = *(module_t * *)stack_get( s );
-            stack_deallocate( s, sizeof( module_t * ) );
+            stack_deallocate<module_t *>( s, 1 );
             frame->module = outer_module;
             break;
         }
@@ -4489,8 +4489,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             frame->module = bindmodule( class_module );
             object_free( class_module );
 
-            *(module_t * *)stack_allocate( s, sizeof( module_t * ) ) =
-                outer_module;
+            *stack_allocate<module_t *>( s, 1 ) = outer_module;
             break;
         }
 
