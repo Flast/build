@@ -6,6 +6,8 @@ http://www.boost.org/LICENSE_1_0.txt)
 */
 
 #include "jam.h"
+#include <new>
+#include <boost/assert.hpp>
 
 #ifdef OPT_BOEHM_GC
 
@@ -73,3 +75,24 @@ http://www.boost.org/LICENSE_1_0.txt)
     #include "duma/print.c"
 
 #endif
+
+void * operator new( std::size_t n, const std::nothrow_t & )
+{
+    return BJAM_MALLOC_RAW( n );
+}
+
+void * operator new( std::size_t n )
+{
+    return ::operator new( n, std::nothrow_t() );
+}
+
+void operator delete( void * p, const std::nothrow_t & )
+{
+    BOOST_ASSERT( p );
+    BJAM_FREE_RAW( p );
+}
+
+void operator delete( void * p )
+{
+    ::operator delete( p, std::nothrow_t() );
+}
