@@ -466,11 +466,11 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
     trailing = list_pop_front( first );
     if ( trailing )
     {
-        if ( inner->args->count == 0 )
+        if ( inner->args->size() == 0 )
             lol_add( inner->args, trailing );
         else
         {
-            LIST * * const l = &inner->args->list[ 0 ];
+            LIST * * const l = &inner->args->at( 0 );
             *l = list_append( trailing, *l );
         }
     }
@@ -564,11 +564,11 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
             string_truncate( buf, 0 );
         }
         string_free( buf );
-        if ( inner->args->count == 0 )
+        if ( inner->args->size() == 0 )
             lol_add( inner->args, trailing );
         else
         {
-            LIST * * const l = &inner->args->list[ 0 ];
+            LIST * * const l = &inner->args->at( 0 );
             *l = list_append( trailing, *l );
         }
     }
@@ -3045,7 +3045,7 @@ void argument_list_check( struct arg_list * formal, int formal_count,
                 actual_iter ) );
     }
 
-    for ( ; i < all_actual->count; ++i )
+    for ( ; i < all_actual->size(); ++i )
     {
         LIST * actual = lol_get( all_actual, i );
         if ( !list_empty( actual ) )
@@ -3122,7 +3122,7 @@ void argument_list_push( struct arg_list * formal, int formal_count,
                 actual_iter ) );
     }
 
-    for ( ; i < all_actual->count; ++i )
+    for ( ; i < all_actual->size(); ++i )
     {
         LIST * const actual = lol_get( all_actual, i );
         if ( !list_empty( actual ) )

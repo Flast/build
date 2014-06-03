@@ -116,6 +116,6 @@ void cmd_free( CMD * cmd )
 
 void cmd_release_targets_and_shell( CMD * cmd )
 {
-    cmd->args.list[ 0 ] = L0;  /* targets */
-    cmd->shell = L0;           /* shell   */
+    cmd->args[ 0 ] = L0;    /* targets */
+    cmd->shell = L0;        /* shell   */
 }

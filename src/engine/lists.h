@@ -47,6 +47,9 @@
 # include <Python.h>
 #endif
 
+#define BOOST_NO_EXCEPTIONS
+#include <boost/container/static_vector.hpp>
+
 /*
  * LIST - list of strings
  */
@@ -66,10 +69,7 @@ typedef OBJECT * * LISTITER;
  */
 
 #define LOL_MAX 19
-typedef struct _lol {
-    int count;
-    LIST * list[ LOL_MAX ];
-} LOL;
+typedef boost::container::static_vector<LIST *, LOL_MAX> LOL;
 
 LIST * list_new( OBJECT * value );
 LIST * list_append( LIST * destination, LIST * source );
@@ -102,7 +102,7 @@ void   lol_add( LOL *, LIST * );
 void   lol_init( LOL * );
 void   lol_free( LOL * );
 LIST * lol_get( LOL *, int i );
-void   lol_print( LOL * );
+void   lol_print( const LOL * );
 void   lol_build( LOL *, char const * * elements );
 
 #ifdef HAVE_PYTHON

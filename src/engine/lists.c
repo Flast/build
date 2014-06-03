@@ -12,6 +12,8 @@
 #include "lists.h"
 
 #include <assert.h>
+#include <boost/assert.hpp>
+#include <boost/foreach.hpp>
 
 #ifndef BJAM_NO_MEM_CACHE
 static LIST * freelist[ 32 ];  /* junkpile for list_dealloc() */
@@ -395,7 +397,8 @@ void list_done()
 
 void lol_init( LOL * lol )
 {
-    lol->count = 0;
+    BOOST_ASSERT( lol );
+    lol->resize( 0 );
 }
 
 
@@ -405,8 +408,9 @@ void lol_init( LOL * lol )
 
 void lol_add( LOL * lol, LIST * l )
 {
-    if ( lol->count < LOL_MAX )
-        lol->list[ lol->count++ ] = l;
+    BOOST_ASSERT( lol );
+    if ( lol->size() < LOL_MAX )
+        lol->push_back( l );
 }
 
 
@@ -416,10 +420,10 @@ void lol_add( LOL * lol, LIST * l )
 
 void lol_free( LOL * lol )
 {
-    int i;
-    for ( i = 0; i < lol->count; ++i )
-        list_free( lol->list[ i ] );
-    lol->count = 0;
+    BOOST_ASSERT( lol );
+    BOOST_FOREACH( LIST *l, *lol )
+        list_free( l );
+    lol->resize( 0 );
 }
 
 
@@ -429,7 +433,8 @@ void lol_free( LOL * lol )
 
 LIST * lol_get( LOL * lol, int i )
 {
-    return i < lol->count ? lol->list[ i ] : L0;
+    BOOST_ASSERT( lol );
+    return i < lol->size() ? lol->at( i ) : L0;
 }
 
 
@@ -437,14 +442,18 @@ LIST * lol_get( LOL * lol, int i )
  * lol_print() - debug print LISTS separated by ":".
  */
 
-void lol_print( LOL * lol )
+void lol_print( const LOL * lol )
 {
-    int i;
-    for ( i = 0; i < lol->count; ++i )
+    BOOST_ASSERT( lol );
+    bool first = true;
+    BOOST_FOREACH( const LIST *l, *lol )
     {
-        if ( i )
+        if ( ! first )
+        {
             printf( " : " );
-        list_print( lol->list[ i ] );
+            first = false;
+        }
+        list_print( l );
     }
 }
 
