@@ -31,7 +31,6 @@
  *  list_print() - print a list of objects to stdout
  *  list_length() - return the number of items in the list
  *
- *  lol_init() - initialize a LOL (list of lists)
  *  lol_add() - append a LIST onto an LOL
  *  lol_free() - free the LOL and its LISTs
  *  lol_get() - return one of the LISTs in the LOL
@@ -99,11 +98,9 @@ LISTITER list_end( LIST * );
 #define L0 ((LIST *)0)
 
 void   lol_add( LOL *, LIST * );
-void   lol_init( LOL * );
 void   lol_free( LOL * );
 LIST * lol_get( LOL *, int i );
 void   lol_print( const LOL * );
-void   lol_build( LOL *, char const * * elements );
 
 #ifdef HAVE_PYTHON
 PyObject * list_to_python( LIST * );

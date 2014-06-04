@@ -392,17 +392,6 @@ void list_done()
 
 
 /*
- * lol_init() - initialize a LOL (list of lists).
- */
-
-void lol_init( LOL * lol )
-{
-    BOOST_ASSERT( lol );
-    lol->resize( 0 );
-}
-
-
-/*
  * lol_add() - append a LIST onto an LOL.
  */
 

@@ -2027,35 +2027,6 @@ LIST * builtin_python_import_rule( FRAME * frame, int flags )
 
 }
 
-#endif  /* #ifdef HAVE_PYTHON */
-
-
-void lol_build( LOL * lol, char const * * elements )
-{
-    LIST * l = L0;
-    lol_init( lol );
-
-    while ( elements && *elements )
-    {
-        if ( !strcmp( *elements, ":" ) )
-        {
-            lol_add( lol, l );
-            l = L0;
-        }
-        else
-        {
-            l = list_push_back( l, object_new( *elements ) );
-        }
-        ++elements;
-    }
-
-    if ( l != L0 )
-        lol_add( lol, l );
-}
-
-
-#ifdef HAVE_PYTHON
-
 /*
  * Calls the bjam rule specified by name passed in 'args'. The name is looked up
  * in the context of bjam's 'python_interface' module. Returns the list of
