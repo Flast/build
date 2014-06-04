@@ -22,6 +22,8 @@
 
 #include <assert.h>
 
+#include <new>
+
 
 /*
  * cmdlist_append_cmd
@@ -61,6 +63,7 @@ void cmdlist_free( CMDLIST * l )
 CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
 {
     CMD * cmd = (CMD *)BJAM_MALLOC( sizeof( CMD ) );
+    new ( static_cast<void *>( cmd ) ) CMD;
     FRAME frame[ 1 ];
 
     assert( cmd );
@@ -73,14 +76,12 @@ CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
     cmd->lock = NULL;
     cmd->unlock = NULL;
 
-    lol_init( &cmd->args );
     lol_add( &cmd->args, targets );
     lol_add( &cmd->args, sources );
     string_new( cmd->buf );
 
     frame_init( frame );
     frame->module = rule->module;
-    lol_init( frame->args );
     lol_add( frame->args, list_copy( targets ) );
     lol_add( frame->args, list_copy( sources ) );
     function_run_actions( rule->actions->command, frame, stack_global(),
