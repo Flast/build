@@ -68,15 +68,12 @@ LIST * sequence_transform( FRAME * frame, int flags )
     {
         FRAME inner[ 1 ];
 
-        frame_init( inner );
         inner->prev = frame;
         inner->prev_user = frame->prev_user;
         inner->module = frame->prev->module;
 
         lol_add( inner->args, list_push_back( list_copy_range( function, args_begin, args_end ), object_copy( list_item( iter ) ) ) );
         result = list_append( result, evaluate_rule( rule, function_name, inner ) );
-
-        frame_free( inner );
     }
 
     return result;

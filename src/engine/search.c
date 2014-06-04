@@ -47,7 +47,6 @@ void call_bind_rule( OBJECT * target_, OBJECT * boundname_ )
         {
             /* Prepare the argument list. */
             FRAME frame[ 1 ];
-            frame_init( frame );
 
             /* First argument is the target name. */
             lol_add( frame->args, list_new( target ) );
@@ -58,9 +57,6 @@ void call_bind_rule( OBJECT * target_, OBJECT * boundname_ )
                 OBJECT * rulename = list_front( bind_rule );
                 list_free( evaluate_rule( bindrule( rulename, root_module() ), rulename, frame ) );
             }
-
-            /* Clean up */
-            frame_free( frame );
         }
         else
         {

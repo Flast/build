@@ -2041,9 +2041,6 @@ PyObject * bjam_call( PyObject * self, PyObject * args )
     OBJECT * rulename;
 
     /* Build up the list of arg lists. */
-    frame_init( inner );
-    inner->prev = 0;
-    inner->prev_user = 0;
     inner->module = bindmodule( constant_python_interface );
 
     /* Extract the rule name and arguments from 'args'. */
@@ -2086,8 +2083,6 @@ PyObject * bjam_call( PyObject * self, PyObject * args )
 
     result = evaluate_rule( bindrule( rulename, inner->module), rulename, inner );
     object_free( rulename );
-
-    frame_free( inner );
 
     /* Convert the bjam list into a Python list result. */
     {

@@ -175,7 +175,6 @@ LIST * call_rule( OBJECT * rulename, FRAME * caller_frame, ... )
     LIST * result;
 
     FRAME inner[ 1 ];
-    frame_init( inner );
     inner->prev = caller_frame;
     inner->prev_user = caller_frame->module->user_module
         ? caller_frame
@@ -193,8 +192,6 @@ LIST * call_rule( OBJECT * rulename, FRAME * caller_frame, ... )
     va_end( va );
 
     result = evaluate_rule( bindrule( rulename, inner->module ), rulename, inner );
-
-    frame_free( inner );
 
     return result;
 }

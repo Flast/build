@@ -86,7 +86,6 @@ void headers( TARGET * t )
     /* Call headers1() to get LIST of included files. */
     {
         FRAME frame[ 1 ];
-        frame_init( frame );
         lol_add( frame->args, list_new( object_copy( t->name ) ) );
 #ifdef OPT_HEADER_CACHE_EXT
         lol_add( frame->args, hcache( t, rec, re, hdrscan ) );
@@ -101,9 +100,6 @@ void headers( TARGET * t )
             lol_add( frame->args, list_new( object_copy( t->boundname ) ) );
             list_free( evaluate_rule( bindrule( rulename, frame->module ), rulename, frame ) );
         }
-
-        /* Clean up. */
-        frame_free( frame );
     }
 }
 

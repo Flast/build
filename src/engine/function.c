@@ -452,7 +452,6 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
 
     rulename = object_copy( list_front( first ) );
 
-    frame_init( inner );
     inner->prev = frame;
     inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
     inner->module = frame->module;  /* This gets fixed up in evaluate_rule(). */
@@ -466,17 +465,16 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
     trailing = list_pop_front( first );
     if ( trailing )
     {
-        if ( inner->args->size() == 0 )
+        if ( inner->args.size() == 0 )
             lol_add( inner->args, trailing );
         else
         {
-            LIST * * const l = &inner->args->at( 0 );
+            LIST * * const l = &inner->args.at( 0 );
             *l = list_append( trailing, *l );
         }
     }
 
     result = evaluate_rule( bindrule( rulename, inner->module ), rulename, inner );
-    frame_free( inner );
     object_free( rulename );
     return result;
 }
@@ -532,8 +530,6 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
         rule = bindrule( real_rulename, frame->module );
     }
 
-    frame_init( inner );
-
     inner->prev = frame;
     inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
     inner->module = frame->module;  /* This gets fixed up in evaluate_rule(), below. */
@@ -564,17 +560,16 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
             string_truncate( buf, 0 );
         }
         string_free( buf );
-        if ( inner->args->size() == 0 )
+        if ( inner->args.size() == 0 )
             lol_add( inner->args, trailing );
         else
         {
-            LIST * * const l = &inner->args->at( 0 );
+            LIST * * const l = &inner->args.at( 0 );
             *l = list_append( trailing, *l );
         }
     }
 
     result = evaluate_rule( rule, real_rulename, inner );
-    frame_free( inner );
     object_free( rulename );
     object_free( real_rulename );
     return result;
@@ -2925,7 +2920,7 @@ static void argument_error( char const * message, FUNCTION * procedure,
     FRAME * frame, OBJECT * arg )
 {
     extern void print_source_line( FRAME * );
-    LOL * actual = frame->args;
+    LOL * actual = &frame->args;
     backtrace_line( frame->prev );
     printf( "*** argument error\n* rule %s ( ", frame->rulename );
     argument_list_print( procedure->formal_arguments,
@@ -2960,7 +2955,6 @@ static void type_check_range( OBJECT * type_name, LISTITER iter, LISTITER end,
     {
         LIST * error;
         FRAME frame[ 1 ];
-        frame_init( frame );
         frame->module = typecheck;
         frame->prev = caller;
         frame->prev_user = caller->module->user_module
@@ -2974,8 +2968,6 @@ static void type_check_range( OBJECT * type_name, LISTITER iter, LISTITER end,
         if ( !list_empty( error ) )
             argument_error( object_str( list_front( error ) ), called, caller,
                 arg_name );
-
-        frame_free( frame );
     }
 }
 
@@ -2989,7 +2981,7 @@ static void type_check( OBJECT * type_name, LIST * values, FRAME * caller,
 void argument_list_check( struct arg_list * formal, int formal_count,
     FUNCTION * function, FRAME * frame )
 {
-    LOL * all_actual = frame->args;
+    LOL * all_actual = &frame->args;
     int i;
 
     for ( i = 0; i < formal_count; ++i )
@@ -3057,7 +3049,7 @@ void argument_list_check( struct arg_list * formal, int formal_count,
 void argument_list_push( struct arg_list * formal, int formal_count,
     FUNCTION * function, FRAME * frame, STACK * s )
 {
-    LOL * all_actual = frame->args;
+    LOL * all_actual = &frame->args;
     int i;
 
     for ( i = 0; i < formal_count; ++i )

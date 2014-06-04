@@ -11,20 +11,31 @@
 #include "lists.h"
 #include "modules.h"
 #include "object.h"
+#include <boost/noncopyable.hpp>
 
 
 typedef struct frame FRAME;
 
-struct frame
+struct frame : private boost::noncopyable
 {
     FRAME      * prev;
     FRAME      * prev_user;  /* The nearest enclosing frame for which
                                 module->user_module is true. */
-    LOL          args[ 1 ];
+    LOL          args;
     module_t   * module;
     OBJECT     * file;
     int          line;
     char const * rulename;
+
+    frame()
+      : prev( 0 ), prev_user( 0 ), module( root_module() ),
+        rulename( "module scope" ), file( 0 ), line( -1 )
+    {}
+
+    ~frame()
+    {
+        lol_free( args );
+    }
 };
 
 
@@ -34,9 +45,5 @@ struct frame
  * and so on, this variable only keeps the most recent Jam frame.
  */
 extern FRAME * frame_before_python_call;
-
-
-void frame_init( FRAME * );
-void frame_free( FRAME * );
 
 #endif

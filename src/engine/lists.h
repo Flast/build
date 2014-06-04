@@ -102,6 +102,11 @@ void   lol_free( LOL * );
 LIST * lol_get( LOL *, int i );
 void   lol_print( const LOL * );
 
+inline void lol_add( LOL & lol, LIST * l ) { lol_add( &lol, l ); }
+inline void lol_free( LOL & lol ) { lol_free( &lol ); }
+inline LIST * lol_get( LOL & lol, int i ) { lol_get( &lol, i ); }
+inline void lol_print( const LOL & lol ) { lol_print( &lol ); }
+
 #ifdef HAVE_PYTHON
 PyObject * list_to_python( LIST * );
 LIST * list_from_python( PyObject * );

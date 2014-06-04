@@ -491,7 +491,6 @@ int main( int argc, char * * argv, char * * arg_environ )
         /* Parse ruleset. */
         {
             FRAME frame[ 1 ];
-            frame_init( frame );
             for ( n = 0; ( s = getoptval( optv, 'f', n ) ); ++n )
             {
                 OBJECT * const filename = object_new( s );
