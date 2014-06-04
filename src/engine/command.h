@@ -26,8 +26,6 @@
  *
  * External routines:
  *
- *  cmd_new() - return a new CMD or 0 if too many args.
- *  cmd_free() - delete CMD and its parts.
  *  cmd_next() - walk the CMD chain.
  *  cmd_release_targets_and_shell() - CMD forgets about its targets & shell.
  */
@@ -43,9 +41,10 @@
 #include "lists.h"
 #include "rules.h"
 #include "strings.h"
+#include <boost/noncopyable.hpp>
 
 
-typedef struct _cmd CMD;
+typedef struct cmd CMD;
 
 /*
  * A list whose elements are either TARGETS or CMDS.
@@ -69,7 +68,7 @@ CMDLIST * cmdlist_append_cmd( CMDLIST *, CMD * );
 CMDLIST * cmdlist_append_target( CMDLIST *, TARGET * );
 void cmd_list_free( CMDLIST * );
 
-struct _cmd
+struct cmd : private boost::noncopyable
 {
     CMDLIST * next;
     RULE * rule;      /* rule->actions contains shell script */
@@ -81,19 +80,19 @@ struct _cmd
     TARGETS * lock;   /* semaphores that are required by this cmd. */
     TARGETS * unlock; /* semaphores that are released when this cmd finishes. */
     char   status;    /* the command status */
+
+    cmd
+    (
+        RULE * rule,     /* rule (referenced) */
+        LIST * targets,  /* $(<) (ownership transferred) */
+        LIST * sources,  /* $(>) (ownership transferred) */
+        LIST * shell     /* $(JAMSHELL) (ownership transferred) */
+    );
+
+    ~cmd();
 };
 
-CMD * cmd_new
-(
-    RULE * rule,     /* rule (referenced) */
-    LIST * targets,  /* $(<) (ownership transferred) */
-    LIST * sources,  /* $(>) (ownership transferred) */
-    LIST * shell     /* $(JAMSHELL) (ownership transferred) */
-);
-
 void cmd_release_targets_and_shell( CMD * );
-
-void cmd_free( CMD * );
 
 #define cmd_next( c ) ((c)->next)
 

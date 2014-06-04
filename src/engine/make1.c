@@ -527,7 +527,7 @@ static void make1c( state const * const pState )
         {
             t->cmds = NULL;
             push_cmds( cmd->next, cmd->status );
-            cmd_free( cmd );
+            delete cmd;
             return;
         }
 
@@ -902,7 +902,7 @@ static void make1c_closure
      */
     t->cmds = NULL;
     push_cmds( cmd->next, t->status );
-    cmd_free( cmd );
+    delete cmd;
 }
 
 /* push the next MAKE1C state after a command is run. */
@@ -1111,7 +1111,7 @@ static CMD * make1cmds( TARGET * t )
                 /* Build cmd: cmd_new() takes ownership of its lists. */
                 if ( list_empty( cmd_targets ) ) cmd_targets = list_copy( nt );
                 if ( list_empty( cmd_shell ) ) cmd_shell = list_copy( shell );
-                cmd = cmd_new( rule, cmd_targets, list_sublist( ns, start,
+                cmd = new CMD( rule, cmd_targets, list_sublist( ns, start,
                     chunk ), cmd_shell );
 
                 cmd_check_result = exec_check( cmd->buf, &cmd->shell,
@@ -1186,7 +1186,7 @@ static CMD * make1cmds( TARGET * t )
                      * if we do not let them die with this cmd object.
                      */
                     cmd_release_targets_and_shell( cmd );
-                    cmd_free( cmd );
+                    delete cmd;
                 }
 
                 if ( !retry )

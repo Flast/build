@@ -55,51 +55,37 @@ void cmdlist_free( CMDLIST * l )
 }
 
 /*
- * cmd_new() - return a new CMD.
+ * cmd::cmd() - initialize a CMD.
  */
 
-CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
+cmd::cmd( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
+  : next( 0 ), rule( rule ), shell( shell ), noop( 0 ),
+    asynccnt( 1 ), lock( NULL ), unlock( NULL ), status( 0 )
 {
-    CMD * cmd = (CMD *)BJAM_MALLOC( sizeof( CMD ) );
-    new ( static_cast<void *>( cmd ) ) CMD;
-    FRAME frame[ 1 ];
+    FRAME frame;
 
-    assert( cmd );
-    cmd->rule = rule;
-    cmd->shell = shell;
-    cmd->next = 0;
-    cmd->noop = 0;
-    cmd->asynccnt = 1;
-    cmd->status = 0;
-    cmd->lock = NULL;
-    cmd->unlock = NULL;
+    lol_add( args, targets );
+    lol_add( args, sources );
+    string_new( buf );
 
-    lol_add( &cmd->args, targets );
-    lol_add( &cmd->args, sources );
-    string_new( cmd->buf );
-
-    frame->module = rule->module;
-    lol_add( frame->args, list_copy( targets ) );
-    lol_add( frame->args, list_copy( sources ) );
-    function_run_actions( rule->actions->command, frame, stack_global(),
-        cmd->buf );
-
-    return cmd;
+    frame.module = rule->module;
+    lol_add( frame.args, list_copy( targets ) );
+    lol_add( frame.args, list_copy( sources ) );
+    function_run_actions( rule->actions->command, &frame, stack_global(), buf );
 }
 
 
 /*
- * cmd_free() - free a CMD
+ * cmd::~cmd() - destruct a CMD
  */
 
-void cmd_free( CMD * cmd )
+cmd::~cmd()
 {
-    cmdlist_free( cmd->next );
-    lol_free( &cmd->args );
-    list_free( cmd->shell );
-    string_free( cmd->buf );
-    freetargets( cmd->unlock );
-    BJAM_FREE( (void *)cmd );
+    cmdlist_free( next );
+    lol_free( &args );
+    list_free( shell );
+    string_free( buf );
+    freetargets( unlock );
 }
 
 
