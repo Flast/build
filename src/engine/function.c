@@ -15,6 +15,7 @@
 #include "frames.h"
 #include "lists.h"
 #include "mem.h"
+#include "allocator.h"
 #include "pathsys.h"
 #include "rules.h"
 #include "search.h"
@@ -24,6 +25,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <boost/foreach.hpp>
+#include <boost/container/vector.hpp>
 
 #ifdef OS_CYGWIN
 # include <cygwin/version.h>
@@ -1310,7 +1314,9 @@ static void dynamic_array_push_impl( struct dynamic_array * const array,
 struct label_info
 {
     int absolute_position;
-    struct dynamic_array uses[ 1 ];
+    boost::container::vector<int, bjam_allocator<int> > uses;
+
+    label_info() : absolute_position( -1 ) {}
 };
 
 struct stored_rule
@@ -1326,7 +1332,7 @@ typedef struct compiler
 {
     struct dynamic_array code[ 1 ];
     struct dynamic_array constants[ 1 ];
-    struct dynamic_array labels[ 1 ];
+    boost::container::vector<label_info, bjam_allocator<label_info> > labels;
     struct dynamic_array rules[ 1 ];
     struct dynamic_array actions[ 1 ];
 } compiler;
@@ -1335,20 +1341,14 @@ static void compiler_init( compiler * c )
 {
     dynamic_array_init( c->code );
     dynamic_array_init( c->constants );
-    dynamic_array_init( c->labels );
     dynamic_array_init( c->rules );
     dynamic_array_init( c->actions );
 }
 
 static void compiler_free( compiler * c )
 {
-    int i;
     dynamic_array_free( c->actions );
     dynamic_array_free( c->rules );
-    for ( i = 0; i < c->labels->size; ++i )
-        dynamic_array_free( dynamic_array_at( struct label_info, c->labels, i
-            ).uses );
-    dynamic_array_free( c->labels );
     dynamic_array_free( c->constants );
     dynamic_array_free( c->code );
 }
@@ -1360,25 +1360,19 @@ static void compile_emit_instruction( compiler * c, instruction instr )
 
 static int compile_new_label( compiler * c )
 {
-    int result = c->labels->size;
-    struct label_info info;
-    info.absolute_position = -1;
-    dynamic_array_init( info.uses );
-    dynamic_array_push( c->labels, info );
+    int result = c->labels.size();
+    c->labels.emplace_back();
     return result;
 }
 
 static void compile_set_label( compiler * c, int label )
 {
-    struct label_info * const l = &dynamic_array_at( struct label_info,
-        c->labels, label );
+    struct label_info & l = c->labels.at( label );
     int const pos = c->code->size;
-    int i;
-    assert( l->absolute_position == -1 );
-    l->absolute_position = pos;
-    for ( i = 0; i < l->uses->size; ++i )
+    assert( l.absolute_position == -1 );
+    l.absolute_position = pos;
+    BOOST_FOREACH( int id, l.uses )
     {
-        int id = dynamic_array_at( int, l->uses, i );
         int offset = (int)( pos - id - 1 );
         dynamic_array_at( instruction, c->code, id ).arg = offset;
     }
@@ -1394,18 +1388,17 @@ static void compile_emit( compiler * c, unsigned int op_code, int arg )
 
 static void compile_emit_branch( compiler * c, unsigned int op_code, int label )
 {
-    struct label_info * const l = &dynamic_array_at( struct label_info,
-        c->labels, label );
+    struct label_info & l = c->labels.at( label );
     int const pos = c->code->size;
     instruction instr;
     instr.op_code = op_code;
-    if ( l->absolute_position == -1 )
+    if ( l.absolute_position == -1 )
     {
         instr.arg = 0;
-        dynamic_array_push( l->uses, pos );
+        l.uses.push_back( pos );
     }
     else
-        instr.arg = (int)( l->absolute_position - pos - 1 );
+        instr.arg = (int)( l.absolute_position - pos - 1 );
     compile_emit_instruction( c, instr );
 }
 
