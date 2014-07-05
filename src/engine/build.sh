@@ -132,6 +132,7 @@ case $BOOST_JAM_TOOLSET in
     gcc)
     BOOST_JAM_CC=gcc
     BOOST_JAM_OPT_JAM="${BOOST_JAM_OPT_JAM} -x c++ -fpermissive -fno-exceptions"
+    BOOST_JAM_OPT_C="-x none"
     ;;
 
     darwin)
@@ -245,9 +246,10 @@ echo "###"
 
 YYACC_SOURCES="yyacc.c"
 MKJAMBASE_SOURCES="mkjambase.c"
+BJAM_CSOURCES="jamgram.c"
 BJAM_SOURCES="\
  command.c compile.c constants.c debug.c execcmd.c frames.c function.c glob.c\
- hash.c hdrmacro.c headers.c jam.c jambase.c jamgram.c lists.c make.c make1.c\
+ hash.c hdrmacro.c headers.c jam.c jambase.c lists.c make.c make1.c\
  object.c option.c output.c parse.c pathsys.c regexp.c rules.c\
  scan.c search.c subst.c timestamp.c variable.c modules.c strings.c filesys.c\
  builtins.c class.c cwd.c native.c md5.c w32_getreg.c modules/set.c\
@@ -294,7 +296,7 @@ if test "${BJAM_UPDATE}" != "update" ; then
             echo_run ./bootstrap/mkjambase0 jambase.c Jambase
         fi
     fi
-    echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_JAM} ${BJAM_SOURCES}
+    echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_JAM} ${BJAM_SOURCES} ${BOOST_JAM_OPT_C} ${BJAM_CSOURCES}
 fi
 if test -x "./bootstrap/jam0" ; then
     if test "${BJAM_UPDATE}" != "update" ; then

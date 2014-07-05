@@ -45,15 +45,15 @@ typedef struct _YYSTYPE
     char const * keyword;
 } YYSTYPE;
 
-extern YYSTYPE yylval;
+extern_c YYSTYPE yylval;
 
-void yymode( int n );
-void yyerror( char const * s );
+extern_c void yymode( int n );
+extern_c void yyerror( char const * s );
 int yyanyerrors();
 void yyfparse( OBJECT * s );
 int yyline();
-int yylex();
-int yyparse();
+extern_c int yylex();
+extern_c int yyparse();
 void yyinput_last_read_token( OBJECT * * name, int * line );
 
 #define SCAN_NORMAL  0  /* normal parsing */

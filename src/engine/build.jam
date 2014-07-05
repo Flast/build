@@ -208,7 +208,7 @@ toolset darwin cc :  "-o " : -D
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## GCC 2.x, 3.x, 4.x
 toolset gcc gcc : "-o " : -D
-    : -x c++ -pedantic -fno-strict-aliasing -fpermissive -fno-exceptions
+    : -pedantic -fno-strict-aliasing
     [ opt --release : [ opt --symbols : -g : -s ] -O3 ]
     [ opt --debug : -g -O0 -fno-inline ]
     [ opt --profile : -O3 -g -pg ]
@@ -485,7 +485,7 @@ if --show-locate-target in $(ARGV)
 # We have some different files for UNIX, and NT.
 jam.source =
     command.c compile.c constants.c debug.c execcmd.c frames.c function.c glob.c
-    hash.c hcache.c headers.c hdrmacro.c jam.c jambase.c jamgram.c lists.c
+    hash.c hcache.c headers.c hdrmacro.c jam.c jambase.c lists.c
     make.c make1.c mem.c object.c option.c output.c parse.c pathsys.c regexp.c
     rules.c scan.c search.c subst.c w32_getreg.c timestamp.c variable.c
     modules.c strings.c filesys.c builtins.c class.c cwd.c native.c md5.c
@@ -499,6 +499,8 @@ else
 {
     jam.source += execunix.c fileunix.c pathunix.c ;
 }
+
+jam.obj = [ .path $(locate-target) jamgram.o ] ;
 
 # Debug assertions, or not.
 if ! $(debug) || --noassert in $(ARGV)
@@ -587,11 +589,31 @@ if $(UNIX) = true { actions [MKDIR] {
     mkdir "$(<)"
 } }
 
+rule .cc
+{
+    # Translate any subdir elements into a simple file name.
+    local o = [ MATCH "([^/]+)[/]?(.+)" : $(<) ] ;
+    o = $(o:J=_) ;
+    o = $(o:S=.o) ;
+    --flags on $(o) = [ on $(o) return $(--flags) ] -c ;
+    LOCATE on $(o) = $(locate-target) ;
+    DEPENDS [ .path $(locate-target) $(o) ] : $(o) ;
+    DEPENDS $(o) : $(<) ;
+    DEPENDS $(o) : $(locate-target) ;
+    [COMPILE] $(o) : $(<) ;
+    .clean $(o) ;
+}
+
 rule .exe
 {
     local exe = $(<) ;
     if $(OS) = NT || ( $(UNIX) = true && $(OS) = CYGWIN ) { exe = $(exe:S=.exe) ; }
     LOCATE on $(exe) = $(locate-target) ;
+    if $(3)
+    {
+        DEPENDS $(exe) : $(3) ;
+        --objs on $(exe) = $(3) ;
+    }
     DEPENDS all : $(exe) ;
     .mkdir $(locate-target) ;
     if $(--link)
@@ -608,7 +630,7 @@ rule .exe
             DEPENDS $(exe) : $(o) ;
             DEPENDS $(o) : $(s) ;
             DEPENDS $(o) : $(locate-target) ;
-            [COMPILE] $(o) : $(s) ;
+            [COMPILE.CXX] $(o) : $(s) ;
             .clean $(o) ;
         }
         DEPENDS $(exe) : $(objs) ;
@@ -620,17 +642,29 @@ rule .exe
     {
         DEPENDS $(exe) : $(>) ;
         DEPENDS $(exe) : $(locate-target) ;
-        [COMPILE] $(exe) : $(>) ;
+        [COMPILE.CXX] $(exe) : $(>) ;
         .clean $(exe) ;
     }
     return $(exe) ;
 }
-if ! $(--def[2]) { actions [COMPILE] {
-    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def)$(--defs)" "$(--flags)" "$(>)" "$(--libs)"
-} }
-else { actions [COMPILE] {
-    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def[1])$(--defs:J=$(--def[2]))$(--def[3])" "$(--flags)"  "$(>)" "$(--libs)"
-} }
+if ! $(--def[2])
+{
+  actions [COMPILE] {
+    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def)$(--defs)" "$(--flags)" "$(>)" "$(--objs)" "$(--libs)"
+  }
+  actions [COMPILE.CXX] {
+    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def)$(--defs)" -x c++ "$(--flags)" -fpermissive -fno-exceptions "$(>)" -x none "$(--objs)" "$(--libs)"
+  }
+}
+else
+{
+  actions [COMPILE] {
+    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def[1])$(--defs:J=$(--def[2]))$(--def[3])" "$(--flags)"  "$(>)" "$(--objs)" "$(--libs)"
+  }
+  actions [COMPILE.CXX] {
+    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def[1])$(--defs:J=$(--def[2]))$(--def[3])" -x c++ "$(--flags)" -fpermissive -fno-exceptions "$(>)" -x none "$(--objs)" "$(--libs)"
+  }
+}
 
 actions [COMPILE.LINK] {
     "$(--link)" "$(--link-bin)$(<:D=)" "$(--link-dir)$(<:D)$(./)" "$(--link-out)$(<)" "$(--link-def)$(--link-defs)" "$(--link-flags)"  "$(>)" "$(--link-libs)"
@@ -760,6 +794,8 @@ if $(grammar) && $(yacc)
     .yacc jamgram.c jamgram.h : jamgram.y ;
 }
 
+.cc jamgram.c ;
+
 # How to build the compiled in jambase.
 rule .mkjambase
 {
@@ -781,7 +817,7 @@ if $(debug)
 # How to build Jam.
 rule .jam
 {
-    $(>).exe = [ .exe $(>) : $(jam.source) ] ;
+    $(>).exe = [ .exe $(>) : $(jam.source) : $(jam.obj) ] ;
     DEPENDS all : $($(>).exe) ;
 
     # Make a copy under the old name.

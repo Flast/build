@@ -20,6 +20,7 @@
 #include "frames.h"
 #include "lists.h"
 #include "modules.h"
+#include "cplusplus.h"
 
 
 #define PARSE_APPEND    0
@@ -64,9 +65,9 @@ struct _PARSE {
 };
 
 void parse_file( OBJECT *, FRAME * );
-void parse_save( PARSE * );
+extern_c void parse_save( PARSE * );
 
-PARSE * parse_make( int type, PARSE * left, PARSE * right, PARSE * third,
+extern_c PARSE * parse_make( int type, PARSE * left, PARSE * right, PARSE * third,
     OBJECT * string, OBJECT * string1, int num );
 
 void parse_refer( PARSE * );

@@ -144,6 +144,10 @@ typedef int YYSTYPE;
 # define YYSTYPE_IS_DECLARED 1
 #endif
 
+#if defined(__cplusplus)
+extern "C" YYSTYPE yylval;
+#else
 extern YYSTYPE yylval;
+#endif
 
 
