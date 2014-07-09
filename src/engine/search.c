@@ -23,6 +23,8 @@
 #include "strings.h"
 #include "timestamp.h"
 #include "variable.h"
+#include "modules.h"
+#include "frames.h"
 
 #include <string.h>
 

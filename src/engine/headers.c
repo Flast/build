@@ -35,6 +35,7 @@
 #include "rules.h"
 #include "subst.h"
 #include "variable.h"
+#include "frames.h"
 
 #ifdef OPT_HEADER_CACHE_EXT
 # include "hcache.h"

@@ -6,6 +6,7 @@
 
 #include "jam.h"
 #include "frames.h"
+#include "modules.h"
 
 
 FRAME * frame_before_python_call;

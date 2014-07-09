@@ -6,10 +6,8 @@
 #ifndef MODULES_DWA10182001_H
 #define MODULES_DWA10182001_H
 
-#include "lists.h"
-#include "object.h"
+#include "typefwd.h"
 
-typedef struct module_t module_t ;
 struct module_t
 {
     OBJECT * name;

@@ -26,6 +26,7 @@
 #include "subst.h"
 #include "timestamp.h"
 #include "variable.h"
+#include "modules.h"
 
 #include <ctype.h>
 

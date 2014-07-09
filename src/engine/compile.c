@@ -35,6 +35,8 @@
 #include "search.h"
 #include "strings.h"
 #include "variable.h"
+#include "frames.h"
+#include "function.h"
 
 #include <assert.h>
 #include <stdarg.h>

@@ -15,6 +15,7 @@
 #include "rules.h"
 #include "strings.h"
 #include "variable.h"
+#include "modules.h"
 
 #include <stdio.h>
 #include <stdlib.h>

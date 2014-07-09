@@ -52,11 +52,10 @@
 %{
 #include "jam.h"
 
-#include "lists.h"
+#include "typefwd.h"
 #include "parse.h"
 #include "scan.h"
 #include "compile.h"
-#include "object.h"
 #include "rules.h"
 
 # define YYMAXDEPTH 10000	/* for OSF and other less endowed yaccs */

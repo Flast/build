@@ -7,14 +7,8 @@
 #ifndef FUNCTION_SW20111123_H
 #define FUNCTION_SW20111123_H
 
-#include "object.h"
-#include "frames.h"
-#include "lists.h"
-#include "parse.h"
 #include "strings.h"
-
-typedef struct _function FUNCTION;
-typedef struct _stack STACK;
+#include "typefwd.h"
 
 STACK * stack_global( void );
 void stack_push( STACK * s, LIST * l );

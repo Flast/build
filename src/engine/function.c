@@ -19,6 +19,8 @@
 #include "rules.h"
 #include "search.h"
 #include "variable.h"
+#include "modules.h"
+#include "parse.h"
 
 #include <assert.h>
 #include <stdio.h>

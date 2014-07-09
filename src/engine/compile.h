@@ -17,9 +17,7 @@
 #ifndef COMPILE_DWA20011022_H
 #define COMPILE_DWA20011022_H
 
-#include "frames.h"
-#include "lists.h"
-#include "object.h"
+#include "typefwd.h"
 #include "rules.h"
 
 void compile_builtins();

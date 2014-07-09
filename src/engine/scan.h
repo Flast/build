@@ -22,18 +22,14 @@
  * lists without quoting.
  */
 
-#include "lists.h"
-#include "object.h"
-#include "parse.h"
-
+#include "typefwd.h"
+#include "cplusplus.h"
 
 /*
  * YYSTYPE - value of a lexical token
  */
 
-#define YYSTYPE YYSYMBOL
-
-typedef struct _YYSTYPE
+struct _YYSTYPE
 {
     int          type;
     OBJECT     * string;
@@ -43,7 +39,7 @@ typedef struct _YYSTYPE
     OBJECT     * file;
     int          line;
     char const * keyword;
-} YYSTYPE;
+};
 
 extern_c YYSTYPE yylval;
 

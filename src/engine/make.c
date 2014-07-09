@@ -44,6 +44,7 @@
 #include "search.h"
 #include "timestamp.h"
 #include "variable.h"
+#include "modules.h"
 
 #include <assert.h>
 

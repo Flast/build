@@ -37,6 +37,9 @@
 #include "pathsys.h"
 #include "search.h"
 #include "variable.h"
+#include "function.h"
+#include "modules.h"
+#include "parse.h"
 
 
 static void set_rule_actions( RULE *, rule_actions * );

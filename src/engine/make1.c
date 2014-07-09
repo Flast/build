@@ -49,6 +49,8 @@
 #include "rules.h"
 #include "search.h"
 #include "variable.h"
+#include "modules.h"
+#include "frames.h"
 
 #include <assert.h>
 #include <stdlib.h>

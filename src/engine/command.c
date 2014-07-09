@@ -19,6 +19,8 @@
 
 #include "lists.h"
 #include "rules.h"
+#include "frames.h"
+#include "function.h"
 
 #include <assert.h>
 

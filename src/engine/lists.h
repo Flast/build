@@ -40,7 +40,7 @@
 #ifndef LISTS_DWA20011022_H
 #define LISTS_DWA20011022_H
 
-#include "object.h"
+#include "typefwd.h"
 
 #ifdef HAVE_PYTHON
 # include <Python.h>
@@ -50,27 +50,25 @@
  * LIST - list of strings
  */
 
-typedef struct _list {
+struct _list {
     union {
         int size;
         struct _list * next;
         OBJECT * align;
     } impl;
-} LIST;
-
-typedef OBJECT * * LISTITER;
+};
 
 /*
  * LOL - list of LISTs
  */
 
 #define LOL_MAX 19
-typedef struct _lol {
+struct _lol {
     int count;
     LIST * list[ LOL_MAX ];
 
     _lol() : count(0) { }
-} LOL;
+};
 
 LIST * list_new( OBJECT * value );
 LIST * list_append( LIST * destination, LIST * source );

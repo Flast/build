@@ -11,7 +11,7 @@
 #ifndef BOOST_JAM_OBJECT_H
 #define BOOST_JAM_OBJECT_H
 
-typedef struct _object OBJECT;
+#include "typefwd.h"
 
 OBJECT * object_new( char const * const );
 OBJECT * object_new_range( char const * const, int const size );

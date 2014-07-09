@@ -9,11 +9,8 @@
 #define FRAMES_DWA20011021_H
 
 #include "lists.h"
-#include "modules.h"
-#include "object.h"
+#include "typefwd.h"
 
-
-typedef struct frame FRAME;
 
 struct frame
 {

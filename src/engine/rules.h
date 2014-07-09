@@ -29,8 +29,7 @@
 #ifndef RULES_DWA_20011020_H
 #define RULES_DWA_20011020_H
 
-#include "function.h"
-#include "modules.h"
+#include "typefwd.h"
 #include "timestamp.h"
 
 

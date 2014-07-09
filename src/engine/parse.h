@@ -17,9 +17,7 @@
 #ifndef PARSE_DWA20011020_H
 #define PARSE_DWA20011020_H
 
-#include "frames.h"
-#include "lists.h"
-#include "modules.h"
+#include "typefwd.h"
 #include "cplusplus.h"
 
 
@@ -47,8 +45,6 @@
 /*
  * Parse tree node.
  */
-
-typedef struct _PARSE PARSE;
 
 struct _PARSE {
     int      type;
