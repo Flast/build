@@ -95,7 +95,7 @@ toolset.flags clang-linux.compile OPTIONS <rtti>off : -fno-rtti ;
 
 rule compile.c++ ( targets * : sources * : properties * )
 {
-    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+    setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
     gcc.setup-address-model $(targets) : $(sources) : $(properties) ;
 
@@ -111,9 +111,10 @@ actions compile.c++ bind PCH_FILE
 
 rule compile.c ( targets * : sources * : properties * )
 {
-    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+    setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
     gcc.setup-address-model $(targets) : $(sources) : $(properties) ;
+
 
     SPACE on $(targets) = " " ;
 
@@ -130,7 +131,7 @@ actions compile.c bind PCH_FILE
 
 rule compile.c++.pch ( targets * : sources * : properties * )
 {
-    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+    setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
     gcc.setup-address-model $(targets) : $(sources) : $(properties) ;
 }
@@ -142,7 +143,7 @@ actions compile.c++.pch
 
 rule compile.c.pch ( targets * : sources * : properties * )
 {
-    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+    setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
     gcc.setup-address-model $(targets) : $(sources) : $(properties) ;
 }
@@ -157,28 +158,40 @@ actions compile.c.pch
 
 rule link ( targets * : sources * : properties * )
 {
-    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+    setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-address-model $(targets) : $(sources) : $(properties) ;
     SPACE on $(targets) = " " ;
     JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
 }
 
-actions link bind LIBRARIES
-{
+actions link bind LIBRARIES {
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
 }
 
 rule link.dll ( targets * : sources * : properties * )
 {
-    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+    setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-address-model $(targets) : $(sources) : $(properties) ;
     SPACE on $(targets) = " " ;
     JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
 }
 
-# Differ from 'link' above only by -shared.
-actions link.dll bind LIBRARIES
+rule setup-threading ( targets * : sources * : properties * )
 {
+    switch $(target)
+    {
+        case windows : 
+            local threading = [ feature.get-values threading : $(properties) ] ;
+            if $(threading) = multi
+                {
+                OPTIONS on $(targets) += -pthread ;
+                }
+        case * : gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+    }
+}
+
+# Differ from 'link' above only by -shared.
+actions link.dll bind LIBRARIES {
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-soname$(SPACE)-Wl,$(<[1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
 }
 
