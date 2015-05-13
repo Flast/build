@@ -451,7 +451,7 @@ rule setup-address-model ( targets * : sources * : properties * )
         else
         {
             local arch = [ feature.get-values architecture : $(properties) ] ;
-            if $(arch) != arm
+            if $(arch) = power || $(arch) = sparc || $(arch) = x86
             {
                 if $(model) = 32
                 {
@@ -1140,8 +1140,7 @@ cpu-flags gcc OPTIONS : x86 : c3-2 : -march=c3-2 ;
 ##
 cpu-flags gcc OPTIONS : x86 : atom : -march=atom ;
 # Sparc
-cpu-flags gcc OPTIONS : sparc : c3 : -mcpu=c3 : default ;
-cpu-flags gcc OPTIONS : sparc : v7 : -mcpu=v7 ;
+cpu-flags gcc OPTIONS : sparc : v7 : -mcpu=v7 : default ;
 cpu-flags gcc OPTIONS : sparc : cypress : -mcpu=cypress ;
 cpu-flags gcc OPTIONS : sparc : v8 : -mcpu=v8 ;
 cpu-flags gcc OPTIONS : sparc : supersparc : -mcpu=supersparc ;
